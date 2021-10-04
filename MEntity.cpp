@@ -1,7 +1,8 @@
 #include "MEntity.h"
 
-MEntity::MEntity(CPoint start, CPoint end, int code) : MDrawable(start, end) {
-	self.setStatusCode(code);
+MEntity::MEntity(CPoint start, CPoint end, int statusCode, int _position) : MDrawable(start, end) {
+	self.setStatusCode(statusCode);
+	self.position = _position;
 }
 
 void MEntity::draw(CDC* dc) {
@@ -164,5 +165,7 @@ MEntity* MEntityFactory::create(MEntityType type, CPoint point, int entityStatus
 		return new MEllipse(point, point, entityStatusCode);
 	case MEntityType::LINE:
 		return new MLine(point, point, entityStatusCode);
+	case MEntityType::TEXT:
+		return nullptr;
 	}
 }

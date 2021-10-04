@@ -1,4 +1,5 @@
-﻿
+﻿#include "MEntityManager.h"
+#include "MOperationManager.h"
 // Work_Flow_DrawerDoc.h: CWorkFlowDrawerDoc 类的接口
 //
 
@@ -9,7 +10,8 @@
 class CWorkFlowDrawerDoc : public CDocument
 {
 private:
-	
+	MEntityManager* entityManager;
+	MOperationManager* operationManager;
 protected: // 仅从序列化创建
 	CWorkFlowDrawerDoc() noexcept;
 	DECLARE_DYNCREATE(CWorkFlowDrawerDoc)
@@ -19,6 +21,8 @@ public:
 
 // 操作
 public:
+	MEntityManager* getEntityManager() { return self.entityManager; }
+	MOperationManager* getOperationManager() { return self.operationManager; }
 
 // 重写
 public:

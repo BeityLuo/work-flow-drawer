@@ -29,20 +29,22 @@ class MEntity : public MDrawable{
 		
 	protected:
 		int statusCode = ENTITY_STATE_NORMAL;
-
+		int position;
 	private:
 		void setStatusCode(int code);
 	public:
-		MEntity(CPoint start, CPoint end, int statusCode = ENTITY_STATE_SELECTED);
+		MEntity(CPoint start, CPoint end, int statusCode = ENTITY_STATE_SELECTED, int position = -1);
 		bool isSelected() { return self.statusCode & self.ENTITY_STATE_SELECTED; }
 		void select() { setStatusCode(self.ENTITY_STATE_SELECTED); }
 		void unselect() { setStatusCode(self.ENTITY_STATE_NORMAL); }
 		virtual void draw(CDC* dc);
 		virtual std::list<CPoint> getSelectPoints() = 0;
-
 		void drawSelectPoints(CDC* dc);
-
 		virtual bool isInside(CPoint point) = 0;
+
+		int getPosition() { return self.position; }
+		void setPosition(int p) { self.position = p; }
+		bool hasPosition() { return self.position != -1; }
 	
 };
 

@@ -31,12 +31,16 @@ END_MESSAGE_MAP()
 CWorkFlowDrawerDoc::CWorkFlowDrawerDoc() noexcept
 {
 	// TODO: 在此添加一次性构造代码
-
+	self.entityManager = new MEntityManager();
+	self.operationManager = new MOperationManager();
 }
 
 CWorkFlowDrawerDoc::~CWorkFlowDrawerDoc()
 {
 }
+
+
+
 
 BOOL CWorkFlowDrawerDoc::OnNewDocument()
 {

@@ -4,6 +4,7 @@
 
 #pragma once
 #include "tools.h"
+#include"MOperationManager.h"
 
 
 class CWorkFlowDrawerView : public CView
@@ -17,6 +18,7 @@ private:
 	MEntityManager* entityManager;
 	// MEntityDrawer* entityDrawer;
 	MEntity* selectedEntity;
+	MOperationManager* operationManager;
 	
 protected: // 仅从序列化创建
 	CWorkFlowDrawerView() noexcept;
@@ -61,6 +63,10 @@ public:
 	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnCancelDraw();
+	afx_msg void OnRedo();
+	afx_msg void OnUndo();
+	afx_msg void OnUpdateDrawLine(CCmdUI* pCmdUI);
+	afx_msg void OnEditDelete();
 };
 
 #ifndef _DEBUG  // Work_Flow_DrawerView.cpp 中的调试版本

@@ -36,6 +36,10 @@ BEGIN_MESSAGE_MAP(CWorkFlowDrawerView, CView)
 	ON_WM_CONTEXTMENU()
 	ON_WM_MOUSEMOVE()
 	ON_COMMAND(ID_CANCEl_DRAW, &CWorkFlowDrawerView::OnCancelDraw)
+	ON_COMMAND(ID_REDO, &CWorkFlowDrawerView::OnRedo)
+	ON_COMMAND(ID_UNDO, &CWorkFlowDrawerView::OnUndo)
+	ON_UPDATE_COMMAND_UI(ID_DRAW_LINE, &CWorkFlowDrawerView::OnUpdateDrawLine)
+	ON_COMMAND(ID_EDIT_DELETE, &CWorkFlowDrawerView::OnEditDelete)
 END_MESSAGE_MAP()
 
 // CWorkFlowDrawerView 构造/析构
@@ -43,7 +47,13 @@ END_MESSAGE_MAP()
 CWorkFlowDrawerView::CWorkFlowDrawerView() noexcept
 {
 	// TODO: 在此处添加构造代码
-	self.entityManager = new MEntityManager();
+	CWorkFlowDrawerDoc* pDoc = self.GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+	self.entityManager = pDoc->getEntityManager();
+	self.operationManager = pDoc->getOperationManager();
+
 	self.selectedEntity = nullptr;
 	self.mouseStatus = MMouseStatus::PRESSED;
 	self.mouseType = MMouseType::SELECT;
@@ -177,7 +187,6 @@ void CWorkFlowDrawerView::OnLButtonDown(UINT nFlags, CPoint point)
 	if (self.mouseType != MMouseType::SELECT) {
 		// 绘图状态
 		MEntity* entity = MEntityFactory::create(mouseType2EntityType(self.mouseType), point, MEntity::ENTITY_STATE_SELECTED);
-		
 		self.selectedEntity = entity;
 		self.entityManager->addEntity(entity);
 	}
@@ -237,7 +246,39 @@ void CWorkFlowDrawerView::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 }
 
 
+void CWorkFlowDrawerView::OnUndo()
+{
+	// TODO: 在此添加命令处理程序代码
+	self.entityManager->undo();
+}
+
+void CWorkFlowDrawerView::OnRedo()
+{
+	// TODO: 在此添加命令处理程序代码
+	self.entityManager->redo();
+}
 
 
+int i = 0;
+void CWorkFlowDrawerView::OnUpdateDrawLine(CCmdUI* pCmdUI)
+{
+	// TODO: 在此添加命令更新用户界面处理程序代码
+	// 当前鼠标正在画线的时候，将画线按钮设置为disable
+	if (self.mouseType == MMouseType::DRAW_LINE) {
+		pCmdUI->Enable(false);
+	}
+	else {
+		pCmdUI->Enable(true);
+	}
+}
 
 
+void CWorkFlowDrawerView::OnEditDelete()
+{
+	// TODO: 在此添加命令处理程序代码
+	std::vector<MEntity*> entities = self.entityManager->getSelectedEntities();
+	self.entityManager->remove(entities);
+	CRect rect;
+	GetClientRect(rect);
+	self.InvalidateRect(rect);
+}
