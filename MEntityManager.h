@@ -11,7 +11,12 @@ class MEntityManager {
 private:
 	std::vector<MEntity*> entityList;
 	MOperationManager operationManager;
+	bool isRecordingOperation;
+
+	void setUnrecording() { self.isRecordingOperation = false; }
+	void setRecording() { self.isRecordingOperation = true; }
 public:
+	MEntityManager() { { self.isRecordingOperation = true; } }
 	MEntity* setSelected(CPoint point);
 	MEntity* setSelectedAndOthersUnselected(CPoint point);
 	void addEntity(MEntity* entity);
@@ -24,5 +29,7 @@ public:
 
 	void undo();
 	void redo();
+	bool existsUndo() { return operationManager.existsUndo(); }
+	bool existsRedo() { return operationManager.existsRedo(); }
 };
 #endif // !MENTITY_MANAGER

@@ -40,6 +40,9 @@ BEGIN_MESSAGE_MAP(CWorkFlowDrawerView, CView)
 	ON_COMMAND(ID_UNDO, &CWorkFlowDrawerView::OnUndo)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_LINE, &CWorkFlowDrawerView::OnUpdateDrawLine)
 	ON_COMMAND(ID_EDIT_DELETE, &CWorkFlowDrawerView::OnEditDelete)
+	ON_UPDATE_COMMAND_UI(ID_REDO, &CWorkFlowDrawerView::OnUpdateRedo)
+	ON_UPDATE_COMMAND_UI(ID_UNDO, &CWorkFlowDrawerView::OnUpdateUndo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, &CWorkFlowDrawerView::OnUpdateEditDelete)
 END_MESSAGE_MAP()
 
 // CWorkFlowDrawerView 构造/析构
@@ -251,16 +254,22 @@ void CWorkFlowDrawerView::OnUndo()
 {
 	// TODO: 在此添加命令处理程序代码
 	self.entityManager->undo();
+	CRect rect;
+	GetClientRect(rect);
+	self.InvalidateRect(rect);
 }
 
 void CWorkFlowDrawerView::OnRedo()
 {
 	// TODO: 在此添加命令处理程序代码
 	self.entityManager->redo();
+	CRect rect;
+	GetClientRect(rect);
+	self.InvalidateRect(rect);
 }
 
 
-int i = 0;
+//int i = 0;
 void CWorkFlowDrawerView::OnUpdateDrawLine(CCmdUI* pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
@@ -282,4 +291,40 @@ void CWorkFlowDrawerView::OnEditDelete()
 	CRect rect;
 	GetClientRect(rect);
 	self.InvalidateRect(rect);
+}
+
+
+void CWorkFlowDrawerView::OnUpdateRedo(CCmdUI* pCmdUI)
+{
+	// TODO: 在此添加命令更新用户界面处理程序代码
+	if (self.entityManager->existsRedo()) {
+		pCmdUI->Enable(true);
+	}
+	else {
+		pCmdUI->Enable(false);
+	}
+}
+
+
+void CWorkFlowDrawerView::OnUpdateUndo(CCmdUI* pCmdUI)
+{
+	// TODO: 在此添加命令更新用户界面处理程序代码
+	if (self.entityManager->existsUndo()) {
+		pCmdUI->Enable(true);
+	}
+	else {
+		pCmdUI->Enable(false);
+	}
+}
+
+
+void CWorkFlowDrawerView::OnUpdateEditDelete(CCmdUI* pCmdUI)
+{
+	// TODO: 在此添加命令更新用户界面处理程序代码
+	if (self.entityManager->getSelectedEntities().size() != 0) {
+		pCmdUI->Enable(true);
+	}
+	else {
+		pCmdUI->Enable(false);
+	}
 }

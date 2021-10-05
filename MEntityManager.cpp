@@ -33,10 +33,12 @@ MEntity* MEntityManager::setSelectedAndOthersUnselected(CPoint point) {
 	}
 	return selected_entity;
 }
+
 void MEntityManager::addEntity(MEntity* entity) {
 	if (entity->hasPosition()) {
-		auto ite = self.entityList.begin() + entity->getPosition();
+		std::vector<MEntity*>::iterator ite = self.entityList.begin() + entity->getPosition();
 		self.entityList.insert(ite, entity);
+		ite = self.entityList.begin() + entity->getPosition();
 		//做完上一步，ite指向entity，故需要更新后续entity
 		for (++ite; ite != self.entityList.end(); ++ite) {
 			(*ite)->setPosition((*ite)->getPosition() + 1);
@@ -46,9 +48,11 @@ void MEntityManager::addEntity(MEntity* entity) {
 		//若还没有被设置过位置，就要设置position为最后一个
 		entity->setPosition(self.entityList.size()); 
 		self.entityList.push_back(entity);
-		self.operationManager.addOperation(new MOperation(entity));
+		
 	}
-	
+	if (self.isRecordingOperation) {
+		self.operationManager.addOperation(new MAddOperation(entity));
+	}
 }
 void MEntityManager::addEntity(std::vector<MEntity*> entities) {
 	for (MEntity* e : entities) {
@@ -59,9 +63,11 @@ void MEntityManager::addEntity(std::vector<MEntity*> entities) {
 void MEntityManager::remove(MEntity* entity) {
 	if (self.contains(entity)) {
 		self.entityList.erase(self.entityList.begin() + entity->getPosition());
-		self.operationManager.addOperation(new MOperation(entity));
 		for (auto it = self.entityList.begin() + entity->getPosition(); it != self.entityList.end(); ++it) {
-			(*it)->setPosition((*it)->getPosition() + 1);
+			(*it)->setPosition((*it)->getPosition() - 1);
+		}
+		if (self.isRecordingOperation) {
+			self.operationManager.addOperation(new MDeleteOperation(entity));
 		}
 	}
 	
@@ -96,15 +102,19 @@ void MEntityManager::undo() {
 	// 得到最后一次操作，把所有的after删掉，添加所有的before
 	MOperation* ope = self.operationManager.getUndoOperation();
 	if (ope != nullptr) {
+		self.setUnrecording();
 		self.remove(ope->entitiesAfter()); //这里返回的最坏情况是空vector，而不会是空指针
 		self.addEntity(ope->entitiesBefore());
+		self.setRecording();
 	}
 }
 
 void MEntityManager::redo() {
 	MOperation* ope = self.operationManager.getRedoOperation();
 	if (ope != nullptr) {
+		self.setUnrecording();
 		self.remove(ope->entitiesBefore()); //与undo的顺序是相反的
 		self.addEntity(ope->entitiesAfter());
+		self.setRecording();
 	}
 }

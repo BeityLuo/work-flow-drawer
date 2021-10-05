@@ -67,6 +67,9 @@ public:
 	afx_msg void OnUndo();
 	afx_msg void OnUpdateDrawLine(CCmdUI* pCmdUI);
 	afx_msg void OnEditDelete();
+	afx_msg void OnUpdateRedo(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateUndo(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditDelete(CCmdUI* pCmdUI);
 };
 
 #ifndef _DEBUG  // Work_Flow_DrawerView.cpp 中的调试版本

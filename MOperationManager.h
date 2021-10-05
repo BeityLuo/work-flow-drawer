@@ -13,6 +13,9 @@ public:
 	void addOperation(MOperation* operation);
 	MOperation* getUndoOperation();
 	MOperation* getRedoOperation();
+
+	bool existsUndo();
+	bool existsRedo();
 };
 
 #endif // !MOPERATION_MANAGER

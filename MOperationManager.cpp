@@ -35,3 +35,11 @@ MOperation* MOperationManager::getRedoOperation() {
 		return *(self.positionToInsert - 1);
 	}
 }
+
+bool MOperationManager::existsUndo() {
+	return !self.operationList.empty();
+}
+
+bool MOperationManager::existsRedo() {
+	return self.positionToInsert != self.operationList.end();
+}
