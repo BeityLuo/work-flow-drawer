@@ -47,12 +47,13 @@ END_MESSAGE_MAP()
 CWorkFlowDrawerView::CWorkFlowDrawerView() noexcept
 {
 	// TODO: 在此处添加构造代码
-	CWorkFlowDrawerDoc* pDoc = self.GetDocument();
+	/*CWorkFlowDrawerDoc* pDoc = self.GetDocument();
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
-		return;
-	self.entityManager = pDoc->getEntityManager();
-	self.operationManager = pDoc->getOperationManager();
+		return;*/
+	// 暂时不用Doc类了
+	self.entityManager = new MEntityManager();
+	self.operationManager = new MOperationManager();
 
 	self.selectedEntity = nullptr;
 	self.mouseStatus = MMouseStatus::PRESSED;

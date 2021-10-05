@@ -167,5 +167,7 @@ MEntity* MEntityFactory::create(MEntityType type, CPoint point, int entityStatus
 		return new MLine(point, point, entityStatusCode);
 	case MEntityType::TEXT:
 		return nullptr;
+	default:
+		return nullptr;
 	}
 }
