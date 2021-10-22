@@ -43,6 +43,10 @@ BEGIN_MESSAGE_MAP(CWorkFlowDrawerView, CView)
 	ON_UPDATE_COMMAND_UI(ID_REDO, &CWorkFlowDrawerView::OnUpdateRedo)
 	ON_UPDATE_COMMAND_UI(ID_UNDO, &CWorkFlowDrawerView::OnUpdateUndo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, &CWorkFlowDrawerView::OnUpdateEditDelete)
+	ON_COMMAND(ID_32785, &CWorkFlowDrawerView::OnMoveUp)
+	ON_COMMAND(ID_32786, &CWorkFlowDrawerView::OnMoveDown)
+	ON_UPDATE_COMMAND_UI(ID_32785, &CWorkFlowDrawerView::OnUpdateMoveUp)
+	ON_UPDATE_COMMAND_UI(ID_32786, &CWorkFlowDrawerView::OnUpdateMoveDown)
 END_MESSAGE_MAP()
 
 // CWorkFlowDrawerView 构造/析构
@@ -56,10 +60,8 @@ CWorkFlowDrawerView::CWorkFlowDrawerView() noexcept
 		return;*/
 	// 暂时不用Doc类了
 	self.entityManager = new MEntityManager();
-	self.operationManager = new MOperationManager();
-
-	self.selectedEntity = nullptr;
-	self.mouseStatus = MMouseStatus::PRESSED;
+	self.drawingEntity = nullptr;
+	self.mouseStatus = MMouseStatus::RELEASED;
 	self.mouseType = MMouseType::SELECT;
 }
 
@@ -121,10 +123,7 @@ CWorkFlowDrawerDoc* CWorkFlowDrawerView::GetDocument() const // 非调试版本�
 
 void CWorkFlowDrawerView::OnDraw(CDC* pDC)
 {
-	CWorkFlowDrawerDoc* pDoc = self.GetDocument();
-	ASSERT_VALID(pDoc);
-	if (!pDoc)
-		return;
+
 
 	// TODO: 在此处为本机数据添加绘制代码
 	for (MEntity* entity : self.entityManager->getEntityList()) {
@@ -177,23 +176,24 @@ void CWorkFlowDrawerView::OnCancelDraw()
 	self.mouseType = MMouseType::SELECT;
 }
 
-
 void CWorkFlowDrawerView::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	
-	self.startPoint = point;
+	self.startPoint = self.endPoint = point;
 	self.mouseStatus = MMouseStatus::PRESSED;
-	if (self.selectedEntity != nullptr) {
-		// 如果有正在画的东西，取消他的选中状态
-		self.selectedEntity->unselect();
+	
+	if (self.drawingEntity != nullptr) {
+		// 如果有正在选中的东西，取消他的选中状态
+		self.drawingEntity->unselect();
 	}
 	if (self.mouseType != MMouseType::SELECT) {
 		// 绘图状态
 		MEntity* entity = MEntityFactory::create(mouseType2EntityType(self.mouseType), point, MEntity::ENTITY_STATE_SELECTED);
-		self.selectedEntity = entity;
+		self.drawingEntity = entity;
 		self.entityManager->addEntity(entity);
 	}
+
 	
 	CView::OnLButtonDown(nFlags, point);
 }
@@ -203,16 +203,31 @@ void CWorkFlowDrawerView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	
-	self.endPoint = point;
+	
 	if (self.mouseStatus == MMouseStatus::PRESSED &&
 		self.mouseType != MMouseType::SELECT) {
 		// 左键按下且处于"非选择（绘图）"状态
-		self.selectedEntity->setEndPoint(point);
+		self.drawingEntity->setEndPoint(point);
 		             
-		CRect rect; // 刷新整个窗口
-		GetClientRect(rect);
-		self.InvalidateRect(rect);
+		self.repaint();
 	}
+	else if (self.mouseStatus == MMouseStatus::PRESSED &&
+		self.mouseType == MMouseType::SELECT) {
+		
+		// 
+		self.entityManager->setSelectedArea(CRect(self.startPoint, self.endPoint));
+		CDC* pDC = GetDC();
+		pDC->SetROP2(R2_XORPEN);
+		CBrush* pOldBrush = (CBrush*)pDC->SelectStockObject(NULL_BRUSH);
+		CPen* pen = new CPen(PS_SOLID, 1, RGB(0, 255, 0));
+		CPen* oldPen = pDC->SelectObject(pen);
+		pDC->Rectangle(self.startPoint.x, self.startPoint.y, self.endPoint.x, self.endPoint.y);
+		pDC->Rectangle(self.startPoint.x, self.startPoint.y, point.x, point.y);
+		pDC->SelectObject(pOldBrush);
+		pDC->SelectObject(oldPen);
+		ReleaseDC(pDC);
+	}
+	self.endPoint = point;
 	CView::OnMouseMove(nFlags, point);
 }
 
@@ -227,18 +242,23 @@ void CWorkFlowDrawerView::OnLButtonUp(UINT nFlags, CPoint point)
 	
 	if (self.mouseType == MMouseType::SELECT) {
 		// 处于选择状态下抬起鼠标时，将开始点设置为“选中”
-		self.selectedEntity = self.entityManager->setSelectedAndOthersUnselected(self.startPoint);
+		if (self.entityManager->isInside(self.startPoint)) {
+			self.entityManager->reverseSelectedStatus(self.startPoint);
+		}
+		else {
+			self.entityManager->clearSelectedStatus();
+		}
+		
 	} else{
 		// 绘画状态
 		if (self.startPoint.x == point.x && self.startPoint.y == point.y) {
 			// 如果开始和结束的点相同，就删除该entity
-			self.entityManager->remove(self.selectedEntity);
+			self.entityManager->remove(self.drawingEntity);
 		}
+		self.drawingEntity = nullptr;
 		self.mouseType = MMouseType::SELECT; // 恢复鼠标状态为“选择”
 	}
-	CRect rect;
-	GetClientRect(rect);
-	self.InvalidateRect(rect);
+	self.repaint();
 	CView::OnLButtonUp(nFlags, point);
 
 }
@@ -249,26 +269,19 @@ void CWorkFlowDrawerView::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 	// TODO: 在此处添加消息处理程序代码
 }
 
-
 void CWorkFlowDrawerView::OnUndo()
 {
 	// TODO: 在此添加命令处理程序代码
 	self.entityManager->undo();
-	CRect rect;
-	GetClientRect(rect);
-	self.InvalidateRect(rect);
+	self.repaint();
 }
 
 void CWorkFlowDrawerView::OnRedo()
 {
 	// TODO: 在此添加命令处理程序代码
 	self.entityManager->redo();
-	CRect rect;
-	GetClientRect(rect);
-	self.InvalidateRect(rect);
+	self.repaint();
 }
-
-
 //int i = 0;
 void CWorkFlowDrawerView::OnUpdateDrawLine(CCmdUI* pCmdUI)
 {
@@ -282,7 +295,6 @@ void CWorkFlowDrawerView::OnUpdateDrawLine(CCmdUI* pCmdUI)
 	}
 }
 
-
 void CWorkFlowDrawerView::OnEditDelete()
 {
 	// TODO: 在此添加命令处理程序代码
@@ -292,7 +304,6 @@ void CWorkFlowDrawerView::OnEditDelete()
 	GetClientRect(rect);
 	self.InvalidateRect(rect);
 }
-
 
 void CWorkFlowDrawerView::OnUpdateRedo(CCmdUI* pCmdUI)
 {
@@ -305,7 +316,6 @@ void CWorkFlowDrawerView::OnUpdateRedo(CCmdUI* pCmdUI)
 	}
 }
 
-
 void CWorkFlowDrawerView::OnUpdateUndo(CCmdUI* pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
@@ -317,7 +327,6 @@ void CWorkFlowDrawerView::OnUpdateUndo(CCmdUI* pCmdUI)
 	}
 }
 
-
 void CWorkFlowDrawerView::OnUpdateEditDelete(CCmdUI* pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
@@ -327,4 +336,35 @@ void CWorkFlowDrawerView::OnUpdateEditDelete(CCmdUI* pCmdUI)
 	else {
 		pCmdUI->Enable(false);
 	}
+}
+
+void CWorkFlowDrawerView::OnMoveUp()
+{
+	self.entityManager->moveUpSelectedEntities();
+	self.repaint();
+}
+
+
+void CWorkFlowDrawerView::OnMoveDown()
+{
+	self.entityManager->moveDownSelectedEntities();
+	self.repaint();
+}
+
+
+void CWorkFlowDrawerView::OnUpdateMoveUp(CCmdUI* pCmdUI)
+{
+	if (self.entityManager->couldMoveUpSelectedEntities())
+		pCmdUI->Enable(true);
+	else
+		pCmdUI->Enable(false);
+}
+
+
+void CWorkFlowDrawerView::OnUpdateMoveDown(CCmdUI* pCmdUI)
+{
+	if (self.entityManager->couldMoveDownSelectedEntities())
+		pCmdUI->Enable(true);
+	else
+		pCmdUI->Enable(false);
 }

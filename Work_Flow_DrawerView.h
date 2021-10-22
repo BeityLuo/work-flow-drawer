@@ -17,8 +17,7 @@ private:
 
 	MEntityManager* entityManager;
 	// MEntityDrawer* entityDrawer;
-	MEntity* selectedEntity;
-	MOperationManager* operationManager;
+	MEntity* drawingEntity;
 	
 protected: // 仅从序列化创建
 	CWorkFlowDrawerView() noexcept;
@@ -70,6 +69,16 @@ public:
 	afx_msg void OnUpdateRedo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateUndo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditDelete(CCmdUI* pCmdUI);
+	afx_msg void OnMoveUp();
+	afx_msg void OnMoveDown();
+	afx_msg void OnUpdateMoveUp(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMoveDown(CCmdUI* pCmdUI);
+
+	void repaint() {
+		CRect rect;
+		GetClientRect(rect);
+		self.InvalidateRect(rect);
+	}
 };
 
 #ifndef _DEBUG  // Work_Flow_DrawerView.cpp 中的调试版本

@@ -40,6 +40,11 @@ void MRectangle::draw(CDC* dc) {
 	
 }
 
+bool MEntity::equals(MEntity* e) {
+	return self.startPoint == e->startPoint && self.endPoint == e->endPoint
+		&& self.statusCode == e->statusCode && self.position == e->position;
+}
+
 std::list<CPoint> MRectangle::getSelectPoints(void) {
 	std::list<CPoint> pointList;
 	pointList.push_back(CPoint(self.startPoint.x, self.startPoint.y));

@@ -6,8 +6,9 @@
 
 class MOperationManager {
 private:
-	std::vector<MOperation*> operationList;
+	std::vector<MOperation*>* operationList;
 	std::vector<MOperation*>::iterator positionToInsert;
+	
 public:
 	MOperationManager();
 	void addOperation(MOperation* operation);

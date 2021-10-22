@@ -45,36 +45,42 @@ class MEntity : public MDrawable{
 		int getPosition() { return self.position; }
 		void setPosition(int p) { self.position = p; }
 		bool hasPosition() { return self.position != -1; }
+
+		virtual MEntity* copy() = 0;
+		bool equals(MEntity* entity);
 	
 };
 
 class MRectangle : public MEntity {
 public:
-	MRectangle(CPoint start, CPoint end, int statusCode = ENTITY_STATE_SELECTED) :
-		MEntity(start, end, statusCode) {}
+	MRectangle(CPoint start, CPoint end, int statusCode = ENTITY_STATE_SELECTED, int position = -1) :
+		MEntity(start, end, statusCode, position) {}
 	void draw(CDC* dc);
 	std::list<CPoint> getSelectPoints(void);
 	bool isInside(CPoint point);
+	MEntity* copy() { return new MRectangle(self.startPoint, self.endPoint, self.statusCode, self.position); }
 };
 
 class MEllipse : public MEntity {
 public:
-	MEllipse(CPoint start, CPoint end, int statusCode = ENTITY_STATE_SELECTED) :
-		MEntity(start, end, statusCode) {}
+	MEllipse(CPoint start, CPoint end, int statusCode = ENTITY_STATE_SELECTED, int position = -1) :
+		MEntity(start, end, statusCode, position) {}
 	void draw(CDC* dc);
 	std::list<CPoint> getSelectPoints(void);
 	bool isInside(CPoint point);
+	MEntity* copy() { return new MEllipse(self.startPoint, self.endPoint, self.statusCode, self.position); }
 };
 
 class MLine : public MEntity {
 public:
-	int SELECT_RANGE_LEN = 4;
+	static const int SELECT_RANGE_LEN = 4;
 public:
-	MLine(CPoint start, CPoint end, int statusCode = ENTITY_STATE_SELECTED) :
-		MEntity(start, end, statusCode) {}
+	MLine(CPoint start, CPoint end, int statusCode = ENTITY_STATE_SELECTED, int position = -1) :
+		MEntity(start, end, statusCode, position) {}
 	void draw(CDC* dc);
 	std::list<CPoint> getSelectPoints(void);
 	bool isInside(CPoint point);
+	MEntity* copy() { return new MLine(self.startPoint, self.endPoint, self.statusCode, self.position); }
 };
 
 

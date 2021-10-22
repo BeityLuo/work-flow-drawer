@@ -10,15 +10,20 @@
 class MEntityManager {
 private:
 	std::vector<MEntity*> entityList;
-	MOperationManager operationManager;
+	MOperationManager* operationManager = new MOperationManager();
 	bool isRecordingOperation;
 
 	void setUnrecording() { self.isRecordingOperation = false; }
 	void setRecording() { self.isRecordingOperation = true; }
 public:
 	MEntityManager() { { self.isRecordingOperation = true; } }
-	MEntity* setSelected(CPoint point);
+	void setSelected(CPoint point);
 	MEntity* setSelectedAndOthersUnselected(CPoint point);
+	void setSelectedArea(CRect rect);
+	void reverseSelectedStatus(CPoint point);
+	bool isInside(CPoint point);
+	void clearSelectedStatus();
+
 	void addEntity(MEntity* entity);
 	void addEntity(std::vector<MEntity*> entities);
 	void remove(MEntity* entity);
@@ -29,7 +34,12 @@ public:
 
 	void undo();
 	void redo();
-	bool existsUndo() { return operationManager.existsUndo(); }
-	bool existsRedo() { return operationManager.existsRedo(); }
+	bool existsUndo() { return self.operationManager->existsUndo(); }
+	bool existsRedo() { return self.operationManager->existsRedo(); }
+
+	void moveUpSelectedEntities();
+	void moveDownSelectedEntities();
+	bool couldMoveUpSelectedEntities();
+	bool couldMoveDownSelectedEntities();
 };
 #endif // !MENTITY_MANAGER
